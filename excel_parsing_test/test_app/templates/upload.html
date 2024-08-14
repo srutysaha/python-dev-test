@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Upload</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <style>
+        .upload-container { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Product Listing</h1>
+    <button id="uploadButton">Add Products</button>
+    <div class="upload-container" style="display:none;">
+        <form id="uploadForm" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="file" accept=".xls,.xlsx">
+            <button type="submit">Upload</button>
+        </form>
+    </div>
+    <table id="productTable" class="display">
+        <thead>
+            <tr>
+                <th>Sl No</th>
+                <th>Product Name</th>
+                <th>Lowest Price</th>
+                <th>Variations & Stock</th>
+                <th>Last Updated</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be inserted by DataTables -->
+        </tbody>
+    </table>
+
+    <script>
+        $(document).ready(function() {
+            $('#productTable').DataTable({
+                ajax: '{% url "product_list" %}',
+                columns: [
+                    { data: 'Sl No' },
+                    { data: 'Product Name' },
+                    { data: 'Lowest Price' },
+                    { data: 'Variations & Stock' },
+                    { data: 'Last Updated' }
+                ],
+                processing: true,
+                serverSide: true
+            });
+
+            $('#uploadButton').click(function() {
+                $('.upload-container').toggle();
+            });
+
+            $('#uploadForm').submit(function(e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                $.ajax({
+                    url: '{% url "upload_products" %}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        alert(response.message);
+                        $('#productTable').DataTable().ajax.reload();
+                    },
+                    error: function(response) {
+                        alert(response.responseJSON.error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
